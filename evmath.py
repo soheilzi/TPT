@@ -4,6 +4,8 @@ import numpy as np
 import csv
 from pathlib import Path
 import os
+import argparse
+
 
 # Regular expression to capture the answer after the last "####"
 ANS_RE_GSM8k = re.compile(r"####\s*(-?[\d.,]+)")
@@ -126,22 +128,22 @@ def process_files(file_paths, anspath, ks, output_csv, correct_output_file, s=50
 # Run the processing
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="eval math problems")
-    parser.add_argument('--samples_dir', default="samples/math_train/ft", required=True, help="Root directory containing subdirectorys for each model's samswers per problem Each problem folder should include JSON files named e0.json, e1.json, …")
-    parser.add_argument('--answer_path', type=str, default="data/gsm8ktrain", help="Path with JSON file of the answers either train or test.")
-    parser.add_argument('--num_samples', type=int, default=5, help="Number of samples you want per question  e0.json, e1.json, … to num_samples")
+    parser.add_argument('--samples_dir', default="samples/math_train", help="Root directory containing subdirectorys for each model's samswers per problem Each problem folder should include JSON files named e0.json, e1.json, …")
+    parser.add_argument('--answer_path', type=str, default="data/gsm8ktrain.json", help="Path with JSON file of the answers either train or test.")
+    parser.add_argument('--num_samples', type=int, default=2, help="Number of samples you want per question  e0.json, e1.json, … to num_samples")
     args = parser.parse_args()
 
-    directories = [d for d in os.listdir(samples_dir) if os.path.isdir(os.path.join(samples_dir, d))]
+    directories = [d for d in os.listdir(args.samples_dir) if os.path.isdir(os.path.join(args.samples_dir, d))]
     # Loop through each directory and set up file paths for processing
     for di in directories:
         # Define the paths based on the current directory
-        d = os.path.join(nam, di)
+        d = os.path.join(args.samples_dir, di)
         file_paths = [f"{d}/e{i}.json" for i in range(args.num_samples)]  # List of JSON files
         anspath = args.answer_path  # Path to JSON file with expected answers
         ks = [1, args.num_samples]  # List of k values for pass@k calculation
         output_csv = f"{d}/pass_at_k_results.csv"  # Path to output CSV file
         correct_output_file = f"{d}/correct_answers.json"  # Path to JSON file for correct answers
-        s = num_samples  # Total number of attempts per problem
+        s = args.num_samples  # Total number of attempts per problem
 
         # Process the files for the current directory
         process_files(file_paths, anspath, ks, output_csv, correct_output_file, s)

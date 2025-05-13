@@ -10,24 +10,22 @@ set -euo pipefail
 # -------------------------
 MODEL_NAME="google/gemma-2-2b-it"
 MAX_MODEL_LEN="1500"
-NUM_SAMPLES="1"
+NUM_SAMPLES="2"
 MATH_DATA="data/gsm8ktrain.json"
 THINK_OUTPUT_DIR="samples/math_train/2b"
 
 MATH_EVAL="data/test500.json"
-EVAL_OUTPUT_DIR="samples/math_eval/ft"
+EVAL_OUTPUT_DIR="samples/math_eval"
 NUM_SAMPLES_EVAL="5"
 
 
-SAMPLES_FT_DIR="samples/math_train/ft"
-ANSWER_PATH="data/gsm8ktrain.json"
-CORRECT_JSON="samples/math_train/correct_answers.json"
+SAMPLES_FT_DIR="samples/math_train"
+CORRECT_JSON="samples/math_train/2b/correct_answers.json"
 
 TRAIN_OUTPUT="data/next/train2k.json"
 EVAL_OUTPUT="data/next/evnext.json"
 TRAIN_SIZE="2000"
 
-FINETUNE_MODEL="google/gemma-2-2b-it"
 TRAIN_DATA_PATH="$TRAIN_OUTPUT"
 EVAL_DATA_PATH="$EVAL_OUTPUT"
 LEARNING_RATE="1e-6"
@@ -61,7 +59,7 @@ python gen_synth.py \
 banner "2) Prune: Scoring correctness"
 python evmath.py \
   --samples_dir "$SAMPLES_FT_DIR" \
-  --answer_path "$ANSWER_PATH" \
+  --answer_path "$MATH_DATA" \
   --num_samples "$NUM_SAMPLES"
 
 # -------------------------
@@ -74,12 +72,12 @@ python make_json.py \
   --eval_output  "$EVAL_OUTPUT" \
   --train_size   "$TRAIN_SIZE"
 
-# -------------------------
-# 3. Train – Fine-tune Model
-# -------------------------
-banner "3) Train: Fine-tuning the model"
+# # -------------------------
+# # 3. Train – Fine-tune Model
+# # -------------------------
+# banner "3) Train: Fine-tuning the model"
 python sft_math.py \
-  --model_name_or_path "$FINETUNE_MODEL" \
+  --model_name_or_path "$MODEL_NAME" \
   --train_data_path   "$TRAIN_DATA_PATH" \
   --eval_data_path    "$EVAL_DATA_PATH" \
   --learning_rate     "$LEARNING_RATE" \

@@ -48,7 +48,7 @@ def genmath(json_file, outs, tokenizer, sampling_params, llm):
         questions_data = json.load(file)
 
     for question in questions_data:
-        num = question["id"]  # Assuming 'id' is the unique identifier for each question
+        num = question["idt"]  # Assuming 'idt' is the unique identifier for each question
         q = question["question"]
         questions.append(q)
         nums.append(num)
@@ -102,7 +102,7 @@ def genmath(json_file, outs, tokenizer, sampling_params, llm):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name", type=str, default='gemma-tpt', help="Model name or path")
+    parser.add_argument("--model_name", type=str, default='google/gemma-2-2b-it', help="Model name or path")
     parser.add_argument("--max_model_len", type=int, default=1500, help="Max model length")
     parser.add_argument("--num_samples", type=int, default=2, help="num sols per question")
     parser.add_argument("--math", type=str, default='data/gsm8ktrain.json', help="Path to Math dataset")
@@ -118,7 +118,7 @@ def main():
     sampling_params = SamplingParams(temperature=0.8, max_tokens=1500, stop_token_ids=[tokenizer.eos_token_id])
     
     if args.math:
-        dirs = [f'{args.output_dir}/e{i}.json' for i in range(10)]
+        dirs = [f'{args.output_dir}/e{i}.json' for i in range(args.num_samples)]
         genmath(args.math, dirs, tokenizer, sampling_params, llm)
     
 if __name__ == "__main__":
