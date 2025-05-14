@@ -133,8 +133,13 @@ if __name__ == "__main__":
     parser.add_argument('--num_samples', type=int, default=2, help="Number of samples you want per question  e0.json, e1.json, … to num_samples")
     args = parser.parse_args()
 
+    print(os.listdir(args.samples_dir))
     directories = [d for d in os.listdir(args.samples_dir) if os.path.isdir(os.path.join(args.samples_dir, d))]
+    # from pathlib import Path
+    # directories = [p for p in Path(args.samples_dir).iterdir() if p.is_dir()]
+
     # Loop through each directory and set up file paths for processing
+    print(directories)
     for di in directories:
         # Define the paths based on the current directory
         d = os.path.join(args.samples_dir, di)
@@ -145,5 +150,6 @@ if __name__ == "__main__":
         correct_output_file = f"{d}/correct_answers.json"  # Path to JSON file for correct answers
         s = args.num_samples  # Total number of attempts per problem
 
+        print(correct_output_file)
         # Process the files for the current directory
         process_files(file_paths, anspath, ks, output_csv, correct_output_file, s)

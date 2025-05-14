@@ -15,21 +15,21 @@ MATH_DATA="data/gsm8ktrain.json"
 THINK_OUTPUT_DIR="samples/math_train_ce/2b"
 
 MATH_EVAL="data/test500.json"
-EVAL_OUTPUT_DIR="samples/math_eval_ce/2b"
+EVAL_OUTPUT_DIR="samples/math_eval_clip/2b"
 NUM_SAMPLES_EVAL="5"
 
 
 SAMPLES_FT_DIR="samples/math_train_ce"
 CORRECT_JSON="samples/math_train_ce/2b/correct_answers.json"
 
-TRAIN_OUTPUT="data/next_ce/train2k.json"
-EVAL_OUTPUT="data/next_ce/evnext.json"
+TRAIN_OUTPUT="data/next_ce/train2k.json" # we want to use the same train set for clip
+EVAL_OUTPUT="data/next_ce/evnext.json" # we want to use the same eval set for clip
 TRAIN_SIZE="2000"
 
 TRAIN_DATA_PATH="$TRAIN_OUTPUT"
 EVAL_DATA_PATH="$EVAL_OUTPUT"
 LEARNING_RATE="1e-6"
-FT_OUTPUT_DIR="gemma-tpt"
+FT_OUTPUT_DIR="gemma-tpt-clip"
 
 VISIBLE_DEVICES=1
 
@@ -47,32 +47,32 @@ function banner() {
 # -------------------------
 # 1. Think – Generate Synthetic Traces
 # -------------------------
-banner "1) Think: Generating synthetic traces"
-CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python gen_synth.py \
-  --model_name    "$MODEL_NAME" \
-  --max_model_len "$MAX_MODEL_LEN" \
-  --num_samples   "$NUM_SAMPLES" \
-  --math          "$MATH_DATA" \
-  --output_dir    "$THINK_OUTPUT_DIR"
+# banner "1) Think: Generating synthetic traces"
+# CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python gen_synth.py \
+#   --model_name    "$MODEL_NAME" \
+#   --max_model_len "$MAX_MODEL_LEN" \
+#   --num_samples   "$NUM_SAMPLES" \
+#   --math          "$MATH_DATA" \
+#   --output_dir    "$THINK_OUTPUT_DIR"
 
-# -------------------------
-# 2. Prune – Score & Filter
-# -------------------------
-banner "2) Prune: Scoring correctness"
-CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python evmath.py \
-  --samples_dir "$SAMPLES_FT_DIR" \
-  --answer_path "$MATH_DATA" \
-  --num_samples "$NUM_SAMPLES"
+# # -------------------------
+# # 2. Prune – Score & Filter
+# # -------------------------
+# banner "2) Prune: Scoring correctness"
+# CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python evmath.py \
+#   --samples_dir "$SAMPLES_FT_DIR" \
+#   --answer_path "$MATH_DATA" \
+#   --num_samples "$NUM_SAMPLES"
 
-# -------------------------
-# 2b. Split – Create train/eval JSON
-# -------------------------
-banner "2b) Split: Building train & eval JSON"
-CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python make_json.py \
-  --input        "$CORRECT_JSON" \
-  --train_output "$TRAIN_OUTPUT" \
-  --eval_output  "$EVAL_OUTPUT" \
-  --train_size   "$TRAIN_SIZE"
+# # -------------------------
+# # 2b. Split – Create train/eval JSON
+# # -------------------------
+# banner "2b) Split: Building train & eval JSON"
+# CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python make_json.py \
+#   --input        "$CORRECT_JSON" \
+#   --train_output "$TRAIN_OUTPUT" \
+#   --eval_output  "$EVAL_OUTPUT" \
+#   --train_size   "$TRAIN_SIZE"
 
 # # -------------------------
 # # 3. Train – Fine-tune Model
@@ -83,7 +83,8 @@ CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python sft_math.py \
   --train_data_path   "$TRAIN_DATA_PATH" \
   --eval_data_path    "$EVAL_DATA_PATH" \
   --learning_rate     "$LEARNING_RATE" \
-  --output_dir        "$FT_OUTPUT_DIR"
+  --output_dir        "$FT_OUTPUT_DIR" \
+  --loss_function     "Clip09"
 
 
 banner "4) Eval: Eval new model"

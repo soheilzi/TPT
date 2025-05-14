@@ -11,6 +11,7 @@ import wandb
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, LambdaLR
 import math
 import os 
+from utils.facal_loss_utils import FocalTrainer, ClipTrainer
 
 def build_instruction_prompt(instruction: str):
     # Truncate the instruction to 1000 characters if it's longer
@@ -69,6 +70,7 @@ class TrainingArguments(transformers.TrainingArguments):
     lr_scheduler_type: str = field(default="cosine")
     load_best_model_at_end: bool = field(default=True)  # Load best model at the end
     save_total_limit: int = field(default=2)  # Keep only 2 checkpoints 
+    loss_function: str = field(default="CE")  # Loss function to use
 
 # def safe_save_model_for_hf_trainer(trainer: transformers.Trainer, output_dir: str):
 #     """Collects the state dict and dump to disk."""
@@ -188,6 +190,8 @@ def train(args):
         training_args.learning_rate = args.learning_rate
     if args.output_dir:
         training_args.output_dir = args.output_dir
+    if args.loss_function:
+        training_args.loss_function = args.loss_function
 
     
     if training_args.local_rank == 0:
@@ -259,7 +263,14 @@ def train(args):
 
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer)
     data_module = dict(train_dataset=train_dataset, eval_dataset=eval_dataset, data_collator=data_collator)
-    trainer = Trainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)
+
+    if training_args.loss_function == "CE":
+        trainer = Trainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)
+    elif training_args.loss_function == "FocalLoss2":
+        trainer = FocalTrainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)
+    elif training_args.loss_function == "Clip09":
+        trainer = ClipTrainer(model=model, tokenizer=tokenizer, args=training_args, clip_val=0.9, **data_module)
+
 
     # Log metrics with wandb
     trainer.add_callback(transformers.integrations.WandbCallback())
@@ -274,6 +285,7 @@ parser = argparse.ArgumentParser(description="Training script with custom argume
 
 # Model and training parameters
 parser.add_argument("--model_name_or_path", type=str, default="google/gemma-2-2b-it", help="Path to pre-trained model or model name")
+parser.add_argument("--loss_function", type=str, default="CE", help="loss functions", )
 
 # Dataset paths
 parser.add_argument("--train_data_path", type=str, default="data/math2b_2k.json", help="Path to the training dataset file (json)")
@@ -288,7 +300,7 @@ args = parser.parse_args()
 
 #TODO login to wandb and set a project name 
 wandb.init(
-    project="your-project",
+    project="tpt-gemma",
     name= args.output_dir
 )
 
