@@ -31,7 +31,7 @@ EVAL_DATA_PATH="$EVAL_OUTPUT"
 LEARNING_RATE="1e-6"
 FT_OUTPUT_DIR="gemma-tpt-clip"
 
-VISIBLE_DEVICES=1
+VISIBLE_DEVICES=0
 
 
 # -------------------------
@@ -85,7 +85,7 @@ CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python sft_math.py \
   --learning_rate     "$LEARNING_RATE" \
   --output_dir        "$FT_OUTPUT_DIR" \
   --loss_function     "ClipLoss" \
-  --loss_gamma        0.9
+  --loss_gamma        1.0
 
 
 banner "4) Eval: Eval new model"
@@ -97,7 +97,7 @@ CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python gen_synth.py \
   --output_dir    "$EVAL_OUTPUT_DIR"
 
 CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python evmath.py \
-  --samples_dir "$EVAL_OUTPUT_DIR" \
+  --samples_dir samples/math_eval_clip/\
   --answer_path "$MATH_EVAL" \
   --num_samples "$NUM_SAMPLES_EVAL"
 

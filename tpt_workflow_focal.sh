@@ -31,7 +31,7 @@ EVAL_DATA_PATH="$EVAL_OUTPUT"
 LEARNING_RATE="1e-6"
 FT_OUTPUT_DIR="gemma-tpt-focal"
 
-VISIBLE_DEVICES=3
+VISIBLE_DEVICES=0
 
 
 # -------------------------
@@ -97,7 +97,7 @@ CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python gen_synth.py \
   --output_dir    "$EVAL_OUTPUT_DIR"
 
 CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python evmath.py \
-  --samples_dir "$EVAL_OUTPUT_DIR" \
+  --samples_dir "samples/math_eval_focal/" \
   --answer_path "$MATH_EVAL" \
   --num_samples "$NUM_SAMPLES_EVAL"
 

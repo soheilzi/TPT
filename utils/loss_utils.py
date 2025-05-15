@@ -7,8 +7,9 @@ IGNORE_INDEX = -100
 
 
 
-def focal_loss(logits, labels, alpha=1.0, ignore_index=IGNORE_INDEX, gamma=2):
+def focal_loss(outputs, labels, alpha=1.0, ignore_index=IGNORE_INDEX, gamma=2, num_items_in_batch=1):
     # Move labels to the correct device to enable model parallelism
+    logits = outputs.logits
     labels = labels.to(logits.device)
     # Shift so that tokens < n predict n
     # Logits shape: (Batch, T, Vocab_size)
@@ -38,7 +39,7 @@ def focal_loss(logits, labels, alpha=1.0, ignore_index=IGNORE_INDEX, gamma=2):
     # Compute the focal loss per token
     loss = -modulating_factor * log_p_t
     # Take the mean loss over all tokens and batches
-    loss = loss.mean()
+    loss = loss.masked_select(mask).sum() / torch.sum(mask.float())
     return loss
 
 
@@ -67,9 +68,12 @@ def clipped_loss(outputs, labels, alpha=1.0, gamma=0.9, ignore_index=IGNORE_INDE
     # Stop gradient for modulating factor
     modulating_factor = modulating_factor.detach() # Look into this to check if it is correct.
 
+    # import pdb; pdb.set_trace()
     # Compute the focal loss per token
     loss = -modulating_factor * log_p_t    
     # loss = -log_p_t
-    # Take the mean loss over all tokens and batches
-    loss = loss.mean()
+    # Take the mean loss over all tokens and batches with mask
+    loss = loss.masked_select(mask).sum() / torch.sum(mask.float())
+    # loss = torch.sum(loss * mask.float(), dim=-1) / torch.sum(mask.float(), dim=-1)
+    # loss = loss.mean()
     return loss
