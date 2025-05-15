@@ -84,7 +84,8 @@ CUDA_VISIBLE_DEVICES=$VISIBLE_DEVICES python sft_math.py \
   --eval_data_path    "$EVAL_DATA_PATH" \
   --learning_rate     "$LEARNING_RATE" \
   --output_dir        "$FT_OUTPUT_DIR" \
-  --loss_function     "Clip09"
+  --loss_function     "ClipLoss" \
+  --loss_gamma        0.9
 
 
 banner "4) Eval: Eval new model"
